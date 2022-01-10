@@ -10,9 +10,9 @@ import os
 from flask import Flask, request
 API_KEY = os.environ.get("API_KEY", None)
 valid_id = [int(id) for id in os.environ.get("VALID_ID", None).split(';')]
-server = Flask(__name__)
 
 bot = telebot.TeleBot(API_KEY)
+server = Flask(__name__)
 
 @bot.message_handler(commands=['start'])
 def start(msg):
