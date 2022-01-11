@@ -11,6 +11,7 @@ from flask import Flask, request
 API_KEY = os.environ.get("API_KEY", None)
 valid_id = [int(id) for id in os.environ.get("VALID_ID", None).split(';')]
 
+scoreboard = {"A":0, "B":0, "C":0, "CSS":0, "SHQ":0}
 bot = telebot.TeleBot(API_KEY)
 server = Flask(__name__)
 
@@ -18,21 +19,93 @@ server = Flask(__name__)
 def start(msg):
     #validate id
     if msg.chat.id in valid_id:
-        text = "welcome to scorebot! click the button below to get started:)"
+        text = "Welcome to scorebot! \n\ninstructions to update the scoreboard \n/update <A/B/C/CSS/SHQ> <points earned> \neg. \n/update A 3 \n/update CSS -5 \n\n/explore to see what a telebot can do"
 
         keyboard = telebot.types.InlineKeyboardMarkup()
-        keyboard.add(telebot.types.InlineKeyboardButton("scoreboard", callback_data="scoreboard"))
+        keyboard.add(telebot.types.InlineKeyboardButton("display", callback_data="display"))
 
         bot.send_message(msg.chat.id, text, reply_markup=keyboard)
     
     else:
         bot.send_message(msg.chat.id, "u do not have access to the bot, pls walk away...")
-        print(msg)
+        alert = f"id entry at start command \nuser id: {msg.from_user.id} \nis_bot: {msg.from_user.is_bot} \nfirst name: {msg.from_user.first_name} \nusername: {msg.from_user.username} \nlast name: {msg.from_user.last_name}"
+        bot.send_message(valid_id[0], alert)
+
+@bot.message_handler(commands=['update'])
+def update(msg):
+    #validate id
+    if msg.chat.id in valid_id:
+        text = "invalid input"
+        if len(msg.text.split(' ')) == 3:
+            try:
+                flt, points = msg.text.split(' ')[1], int(msg.text.split(' ')[2])
+
+                if flt in ['A', 'B', 'C', 'CSS', 'SHQ']:
+                    scoreboard[flt] = scoreboard[flt] + points
+                    text = f"{flt} has earned {points} points"
+            except:
+                pass
+
+        bot.send_message(msg.chat.id, text)
+    
+    else:
+        bot.send_message(msg.chat.id, "u do not have access to the bot, pls walk away...")
+        alert = f"id entry at start command \nuser id: {msg.from_user.id} \nis_bot: {msg.from_user.is_bot} \nfirst name: {msg.from_user.first_name} \nusername: {msg.from_user.username} \nlast name: {msg.from_user.last_name}"
+        bot.send_message(valid_id[0], alert)
+
+@bot.callback_query_handler(func=lambda call: call.data == "display")
+def display(call):
+    bot.answer_callback_query(call.id) #required to remove the loading state, which appears upon clicking the button
+
+    #validate id
+    if call.message.chat.id in valid_id:
+        text = f'''DISPLAY
+
+┌───── •✧✧• ─────┐
+        SCOREBOARD
+        A   : {scoreboard["A"]}
+        B   : {scoreboard["B"]}
+        C   : {scoreboard["C"]}
+        CSS : {scoreboard["CSS"]}
+        SHQ : {scoreboard["SHQ"]}
+└───── •✧✧• ─────┘
+'''
+
+        keyboard = telebot.types.InlineKeyboardMarkup()
+        keyboard.row(
+            telebot.types.InlineKeyboardButton("refresh", callback_data="display"), 
+        )
+        
+        bot.edit_message_text(
+            text= text,
+            chat_id= call.message.chat.id,
+            message_id= call.message.message_id,
+            reply_markup= keyboard
+        )
+    
+    else:
+        bot.send_message(call.message.chat.id, "u do not have access to the bot, pls walk away...")
+
+
+###########################################################################################################3
+@bot.message_handler(commands=['explore'])
+def explore(msg):
+    #validate id
+    if msg.chat.id in valid_id:
+        text = "this is the explore section to understand what can a telebot do! click the button below to get started:)"
+
+        keyboard = telebot.types.InlineKeyboardMarkup()
+        keyboard.add(telebot.types.InlineKeyboardButton("menu", callback_data="menu"))
+
+        bot.send_message(msg.chat.id, text, reply_markup=keyboard)
+    
+    else:
+        bot.send_message(msg.chat.id, "u do not have access to the bot, pls walk away...")
         alert = f"id entry at start command \nuser id: {msg.from_user.id} \nis_bot: {msg.from_user.is_bot} \nfirst name: {msg.from_user.first_name} \nusername: {msg.from_user.username} \nlast name: {msg.from_user.last_name}"
         bot.send_message(valid_id[0], alert)
 
 @bot.message_handler(commands=['hello'])
-def start(msg):
+def hello(msg):
     #validate id
     if msg.chat.id in valid_id:
         text = f"hello {msg.from_user.first_name} {msg.from_user.last_name} \n\nye i can get ur name too HAHAHA"
@@ -43,7 +116,7 @@ def start(msg):
         alert = f"id entry at start command \nuser id: {msg.from_user.id} \nis_bot: {msg.from_user.is_bot} \nfirst name: {msg.from_user.first_name} \nusername: {msg.from_user.username} \nlast name: {msg.from_user.last_name}"
         bot.send_message(valid_id[0], alert)
 
-@bot.callback_query_handler(func=lambda call: call.data == "scoreboard")
+@bot.callback_query_handler(func=lambda call: call.data == "menu")
 def handle_menu(call):
     bot.answer_callback_query(call.id) #required to remove the loading state, which appears upon clicking the button
 
@@ -85,7 +158,7 @@ def handle_menu(call):
         bot.send_message(call.message.chat.id, "u do not have access to the bot, pls walk away...")
 
 @bot.callback_query_handler(func=lambda call: call.data == "button1")
-def handle_schedule(call):
+def handle_button1(call):
     bot.answer_callback_query(call.id) #required to remove the loading state, which appears upon clicking the button
 
     #validate id
@@ -118,7 +191,7 @@ def handle_schedule(call):
         bot.send_message(call.message.chat.id, "u do not have access to the bot, pls walk away...")
 
 @bot.callback_query_handler(func=lambda call: call.data == "button2")
-def handle_schedule(call):
+def handle_button2(call):
     bot.answer_callback_query(call.id) #required to remove the loading state, which appears upon clicking the button
 
     #validate id
