@@ -2,19 +2,19 @@ import telebot
 import mongodatabase
 import functions
 
-import config
-API_KEY = config.API_KEY
-valid_id = [int(id) for id in config.VALID_ID.split(';')]
-link = config.LINK
-db_name = config.DB_NAME
+# import config
+# API_KEY = config.API_KEY
+# valid_id = [int(id) for id in config.VALID_ID.split(';')]
+# link = config.LINK
+# db_name = config.DB_NAME
 
-# import os
-# from flask import Flask, request
-# API_KEY = os.environ.get("API_KEY", None)
-# valid_id = [int(id) for id in os.environ.get("VALID_ID", None).split(';')]
-# link = os.environ.get("LINK", None)
-# db_name = os.environ.get("DB_NAME", None)
-# server = Flask(__name__)
+import os
+from flask import Flask, request
+API_KEY = os.environ.get("API_KEY", None)
+valid_id = [int(id) for id in os.environ.get("VALID_ID", None).split(';')]
+link = os.environ.get("LINK", None)
+db_name = os.environ.get("DB_NAME", None)
+server = Flask(__name__)
 
 db = mongodatabase.Database(link, db_name)
 bot = telebot.TeleBot(API_KEY)
@@ -147,20 +147,20 @@ def handle_mess(call):
     else:
         bot.send_message(call.message.chat.id, "u do not have access to the bot, pls walk away...")
 
-bot.polling()
+# bot.polling()
 
-# @server.route('/' + API_KEY, methods=['POST'])
-# def getMessage():
-#     json_string = request.get_data().decode('utf-8')
-#     update = telebot.types.Update.de_json(json_string)
-#     bot.process_new_updates([update])
-#     return "!", 200
+@server.route('/' + API_KEY, methods=['POST'])
+def getMessage():
+    json_string = request.get_data().decode('utf-8')
+    update = telebot.types.Update.de_json(json_string)
+    bot.process_new_updates([update])
+    return "!", 200
 
-# @server.route("/")
-# def webhook():
-#     bot.remove_webhook()
-#     bot.set_webhook(url="https://lckhappysquadbot.herokuapp.com/" + API_KEY)
-#     return "!", 200
+@server.route("/")
+def webhook():
+    bot.remove_webhook()
+    bot.set_webhook(url="https://lckhappysquadbot.herokuapp.com/" + API_KEY)
+    return "!", 200
 
-# if __name__ == "__main__":
-#     server.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+if __name__ == "__main__":
+    server.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
